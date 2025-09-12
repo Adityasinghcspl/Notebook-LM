@@ -1,35 +1,44 @@
-import { useState } from "react";
-import {  Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Link, FileText, Loader2 } from "lucide-react";
-import type { Source } from "@/types/type";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { toast } from "react-toastify"
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/redux/store";
+import { uploadSource } from "@/redux/features/slice/embeddingSlice";
+import { getAllCollectionList } from "@/redux/features/slice/collectionsSlice";
 
 interface AddSourceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSourceAdded?: (source: Source) => void;
+  title?: string | null;
 }
 
-export default function AddSourceModal({
-  isOpen,
-  onClose,
-  onSourceAdded,
-}: AddSourceModalProps) {
+export default function AddSourceModal({ isOpen, onClose, title: propTitle }: AddSourceModalProps) {
   const [activeTab, setActiveTab] = useState<"upload" | "url" | "text">("upload");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Initialize title if propTitle exists
+  useEffect(() => {
+    if (propTitle) {
+      setTitle(propTitle);
+    } else {
+      setTitle("");
+    }
+  }, [propTitle]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      if (!title.trim()) {
+      if (!propTitle && !title.trim()) {
         setTitle(selectedFile.name);
       }
     }
@@ -43,56 +52,19 @@ export default function AddSourceModal({
     }
     setIsLoading(true);
     try {
-      let response;
-
-      if (activeTab === "url" && url.trim()) {
-        response = await fetch("http://localhost:5000/api/url/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: title.trim(), url }),
-        });
-      } else if (activeTab === "text" && text.trim()) {
-        response = await fetch("http://localhost:5000/api/content/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: title.trim(), content: text }),
-        });
-      } else if (activeTab === "upload" && file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", title.trim());
-
-        response = await fetch("http://localhost:5000/api/file/upload", {
-          method: "POST",
-          body: formData,
-        });
-      } else {
-        toast.error("Please provide all required information");
-        setIsLoading(false);
-        return;
-      }
-
-      if (!response.ok) throw new Error(`Upload failed: ${response.statusText}`);
-
-      const data = await response.json();
-
-      const source: Source = {
-        id: data.id || Date.now().toString(),
-        title: title.trim(),
-        type: activeTab === "upload" ? "PDF" : activeTab === "url" ? "URL" : "Text",
-        content: activeTab === "url" ? url : activeTab === "text" ? text : file?.name || "",
-        createdAt: new Date().toISOString(),
-      };
-
-      toast.success("Source uploaded successfully!");
+      const responce = await dispatch(
+        uploadSource({ activeTab, title, url, text, file })
+      ).unwrap();
+      toast.success(responce?.message || "Source uploaded successfully!");
+      dispatch(getAllCollectionList());
       onClose();
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload source");
+      toast.error(error);
     } finally {
       setUrl("");
-      setText("");
-      setTitle("");
+      if (!propTitle) setTitle("");
       setFile(null);
+      setText("l")
       setIsLoading(false);
     }
   };
@@ -155,6 +127,7 @@ export default function AddSourceModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter a title for this source (required)"
+              disabled={!!propTitle}
               required
             />
           </div>
