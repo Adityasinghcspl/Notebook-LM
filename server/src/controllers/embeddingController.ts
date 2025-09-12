@@ -1,4 +1,4 @@
-import { listCollections } from "../middlewares/vectorStore";
+import { deleteCollection, listCollections } from "../middlewares/vectorStore";
 import processContentEmbedding from "../utils/embedding/contentEmbedding";
 import processPDFEmbedding from "../utils/embedding/pdfEmbedding";
 import processURLEmbedding from "../utils/embedding/urlEmbedding";
@@ -14,7 +14,6 @@ export const contentUploadHandler = async (req: Request, res: Response) => {
     await processContentEmbedding(content, title);
     res.json({ success: true, message: "Content embedded successfully" });
   } catch (error: any) {
-    console.error("Content Embedding Error:", error);
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
   }
 };
@@ -33,7 +32,6 @@ export const pdfUploadHandler = async (req: Request, res: Response) => {
 
     res.json({ success: true, message: "PDF embedded successfully" });
   } catch (error: any) {
-    console.error("File Embedding Error:", error);
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
   }
 };
@@ -48,7 +46,6 @@ export const urlUploadHandler = async (req: Request, res: Response) => {
     await processURLEmbedding(url, title);
     res.json({ success: true, message: "URL embedded successfully" });
   } catch (error: any) {
-    console.error("URL Embedding Error:", error);
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
   }
 };
@@ -57,8 +54,21 @@ export const handleGetCollections = async (req: Request, res: Response) => {
   try {
     const collections = await listCollections();
     res.json(collections);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch collections" });
+  } catch (error: any) {
+    res.status(error?.status || 500).json({ error: "Failed to fetch collections" });
+  }
+};
+
+export const handleDeleteCollection = async (req: Request, res: Response) => {
+  try {
+    const collectionName  = req.params.collectionName;
+    if (!collectionName) {
+      return res.status(400).json({ message: "Collection name is required" });
+    }
+    await deleteCollection(collectionName);
+    res.json({ message: `Collection '${collectionName}' deleted successfully` });
+  } catch (error: any) {
+    res.status(error?.status || 500).json({ error: error?.message || "Failed to delete collection" });
   }
 };
 
