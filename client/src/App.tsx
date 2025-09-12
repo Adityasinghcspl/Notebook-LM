@@ -5,7 +5,7 @@ import Signin from './pages/Authentication/Signin';
 import Signup from './pages/Authentication/Signup';
 import { ResetPassword } from './pages/Authentication/ResetPassword';
 import { auth } from './lib/firebase';
-import { onAuthStateChanged, onIdTokenChanged } from 'firebase/auth';
+import { onIdTokenChanged } from 'firebase/auth';
 import { Loader } from './components/ui/loader';
 import DefaultLayout from './layout/DefaultLayout';
 import { useDispatch } from 'react-redux';
@@ -14,25 +14,6 @@ import { setUser } from './redux/features/slice/userSlice';
 function App() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const dispatch = useDispatch();
-
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
-  //     if (user) {
-  //       const userData = {
-  //         providerData: user.providerData,
-  //         accessToken: (user as any).stsTokenManager?.accessToken || null,
-  //       };
-
-  //       dispatch(setUser(userData));
-  //       setIsAuthorized(true);
-  //     } else {
-  //       console.log("❌ No user logged in");
-  //       setIsAuthorized(false);
-  //     }
-  //   });
-  //   // Cleanup subscription on unmount
-  //   return () => unsubscribe();
-  // }, []);
 
   useEffect(() => {
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
