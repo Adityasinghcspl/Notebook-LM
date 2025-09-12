@@ -2,8 +2,7 @@ import express, { Express } from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import config from '../config.json';
-import { getFilesWithKeyword } from './utils/getFilesWithKeyword';
+import router from './routes/apiRoutes';
 
 const app: Express = express();
 
@@ -16,13 +15,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Handle logs in console during development
-if (process.env.NODE_ENV === 'development' || config.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
-  app.use(cors());
+  // Parse comma-separated origins from .env
+  const allowedOrigins = (process.env.UI_URL || '').split(',');
+  // CORS middleware
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
 }
 
 // Handle security and origin in production
-if (process.env.NODE_ENV === 'production' || config.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production') {
   app.use(helmet());
 }
 
@@ -30,10 +43,8 @@ if (process.env.NODE_ENV === 'production' || config.NODE_ENV === 'production') {
  *                               Register all routes
  ***********************************************************************************/
 
-getFilesWithKeyword('router', __dirname + '/app').forEach((file: string) => {
-  const { router } = require(file);
-  app.use('/', router);
-})
+app.use('/api', router);
+
 /************************************************************************************
  *                               Express Error Handling
  ***********************************************************************************/
