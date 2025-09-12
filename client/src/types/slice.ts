@@ -11,16 +11,12 @@ export interface UserState {
   error: string | null;
 }
 
-export interface Source {
-  id: string;
-  title: string;
-  type: "PDF" | "URL" | "Text";
-  content: string;
-  createdAt: string;
+export interface CollectionList{
+  name: string
 }
 
-export interface EmbeddingState {
-  sources: Source[];
+export interface CollectionListState{
+  data: CollectionList[];
   isLoading: boolean;
   error: string | null;
 }
