@@ -17,6 +17,7 @@ export interface CollectionList{
 
 export interface CollectionListState{
   data: CollectionList[];
+  selectedCollection: string | null;
   isLoading: boolean;
   error: string | null;
 }

@@ -27,14 +27,14 @@ import {
 } from "./ui/dropdown-menu";
 import AddSourceModal from "./add-source-modal";
 import { toast } from "react-toastify";
-import { deleteCollection, getAllCollectionList } from "@/redux/features/slice/collectionsSlice";
+import { deleteCollection, getAllCollectionList, setSelectedCollection } from "@/redux/features/slice/collectionsSlice";
 import { cn } from "@/lib/utils";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { open } = useSidebar();
   const dispatch = useDispatch<AppDispatch>();
 
-  const { data: collections, isLoading } = useSelector((state: RootState) => state.collections);
+  const { data: collections, isLoading, selectedCollection } = useSelector((state: RootState) => state.collections);
   const user = useSelector((state: RootState) => state.user.data?.providerData);
 
   const userData = {
@@ -44,7 +44,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   };
 
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
-  const [selectedCollection, setSelectedCollection] = React.useState<string | null>(null);
   const [titleName, SetTitleName] = React.useState<string | null>(null);
 
   //  Fetch collections on mount
@@ -76,7 +75,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   };
 
   const handleCheckboxChange = (id: string) => {
-    setSelectedCollection((prev) => (prev === id ? null : id)); // only one selected
+    dispatch(setSelectedCollection(id));
   };
 
   return (
@@ -151,7 +150,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               )}
 
               {/* Collection List */}
-              <div className="pt-4"> {/* Padding top for the whole list */}
+              <div className="pt-4">
                 {!isLoading &&
                   collections.map((collection) => {
                     const isActive = selectedCollection === collection.name

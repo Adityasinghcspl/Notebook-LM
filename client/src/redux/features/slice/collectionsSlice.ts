@@ -6,6 +6,7 @@ import type { RootState } from "@/redux/store";
 
 const initialState: CollectionListState = {
   data: [],
+  selectedCollection: null,
   isLoading: false,
   error: null,
 };
@@ -71,6 +72,9 @@ const collectionSlice = createSlice({
       state.error = null;
       state.isLoading = false;
     },
+    setSelectedCollection: (state, action: PayloadAction<string | null>) => {
+      state.selectedCollection = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -107,5 +111,5 @@ const collectionSlice = createSlice({
 });
 
 // ✅ Exports
-export const { clearCollections } = collectionSlice.actions;
+export const { clearCollections, setSelectedCollection } = collectionSlice.actions;
 export default collectionSlice.reducer;
