@@ -1,17 +1,22 @@
-import OpenAI from "openai";
-import { getVectorStore } from '../middlewares/vectorStore';
-import "dotenv/config";
+import { getVectorStore } from "../middlewares/vectorStore";
+import { Response } from "express";
+import { pipeTextStreamToResponse, streamText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
-export default async function chat(query:string, k:number = 3) {
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_API_KEY,
+});
 
-  const vectorStore = await getVectorStore('web_content'); // Use the appropriate collection name
+const model = google("gemini-2.0-flash");
 
-  // Retrieve top-k similar chunks
-  const retriever = vectorStore.asRetriever({ k });
-  const relevantChunks = await retriever.invoke(query);
+export default async function chat(query: string, res: Response, collectionName: string, k: number = 3) {
+  try {
+    const vectorStore = await getVectorStore(collectionName);
+    const retriever = vectorStore.asRetriever({ k });
+    const relevantChunks = await retriever.invoke(query);
 
-  // System prompt
-  const systemPrompt = `
+    // System prompt
+    const systemPrompt = `
     You are a helpful assistant that answers questions based ONLY on the provided context.
     If the context does not contain the answer, reply exactly with:
     "I don't know from the given data."
@@ -19,22 +24,36 @@ export default async function chat(query:string, k:number = 3) {
 
     Context:
     ${JSON.stringify(relevantChunks)}
+
+    Rules:
+    - If the answer is not in the context, reply EXACTLY:
+      Answer: I don't know from the given data.
+      Sources: None
+    - If the answer is in the context:
+      1. Answer in at most explain proper.
+      2. Sources MUST be listed (page number if available).
+      3. Never fabricate sources.
+      4. If multiple sources exist, list them all, separated by commas.
+
+    Output format (mandatory):
+    Answer: <your concise answer>
+    Sources: <page <pageNumber>>, <page <pageNumber>>
   `;
 
-  // Gemini Chat API (via OpenAI wrapper)
-  const client = new OpenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-  });
+    const result = streamText({
+      model: model,
+      system: systemPrompt,
+      prompt: query,
+      onError({ error }) {
+        console.error(error);
+      },
+    });
 
-  const response = await client.chat.completions.create({
-    model: "gemini-2.0-flash",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: query },
-    ],
-  });
+    // This writes text deltas to Express `res` as they arrive
+    result.pipeUIMessageStreamToResponse(res);
 
-  const answer = response.choices[0].message.content;
-  return answer;
+  } catch (err: any) {
+    console.error("Chat streaming error:", err);
+    res.status(err.status || 500).send("Error while streaming response");
+  }
 }
