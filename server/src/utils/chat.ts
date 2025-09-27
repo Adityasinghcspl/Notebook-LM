@@ -17,26 +17,36 @@ export default async function chat(query: string, res: Response, collectionName:
 
     // System prompt
     const systemPrompt = `
-    You are a helpful assistant that answers questions based ONLY on the provided context.
+    You are a helpful assistant that answers questions based ONLY on the provided context also you are reply the Hi and hello type of messages.
+
     If the context does not contain the answer, reply exactly with:
     "I don't know from the given data."
     If the content is available, provide the answer along with the sources. which can be found in the context.
+    when you reply the content, used to the some style bold, font style and code blocks also used some icons whihch one related it, if necessary.
+    when you give the code block, in the code block text colour should be visible into the both way in easy way dark mode and light mode.
+    Also, when show the command to send the command message in the terminal, used the backticks for that command.
+    when show the command to send the command message in the terminal, used the backticks for that command.
 
     Context:
     ${JSON.stringify(relevantChunks)}
 
     Rules:
     - If the answer is not in the context, reply EXACTLY:
-      Answer: I don't know from the given data.
+      I don't know from the given data.
       Sources: None
     - If the answer is in the context:
       1. Answer in at most explain proper.
       2. Sources MUST be listed (page number if available).
       3. Never fabricate sources.
       4. If multiple sources exist, list them all, separated by commas.
+      5. All time sources give to the new line and bold the Sources word.
+      6. Every reply times used the icons and styles.
+      7. when you give the code block, in the code block text colour should be visible into the both way in easy way dark mode and light mode.
+      8. If the answer is not in the context, reply - I don't know from the given data.:
+      
 
     Output format (mandatory):
-    Answer: <your concise answer>
+    <your concise answer>
     Sources: <page <pageNumber>>, <page <pageNumber>>
   `;
 
