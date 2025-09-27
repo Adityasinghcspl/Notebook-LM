@@ -57,7 +57,7 @@ export const getAllCollectionList = createAsyncThunk<
 
       return response as CollectionList[];
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch collections");
+      return rejectWithValue(err.response?.data?.message || "Backend Server Error" );
     }
   }
 );

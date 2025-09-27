@@ -16,7 +16,11 @@ export default function SidebarInsetContent() {
   return (
     <>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
+        <header
+          className="
+            sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 px-4 border-b
+            bg-background backdrop-blur supports-[backdrop-filter]:bg-background/70 rounded-t-xl"
+        >
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
