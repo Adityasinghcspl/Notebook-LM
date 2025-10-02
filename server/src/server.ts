@@ -15,15 +15,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Parse comma-separated origins from .env
-const allowedOrigins: string[] = (process.env.UI_URL || "http://localhost:5173").split(",")
-  .map(origin => origin.replace(/\/$/, ""));;
+const allowedOrigins: string[] = (process.env.UI_URL || "http://localhost:5173").split(",");
 
 // Common CORS config
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
-    const normalizedOrigin = (origin ?? "").replace(/\/$/, "");
     // Allow requests with no origin (like curl, Postman, mobile apps)
-    if (!origin || allowedOrigins.includes(normalizedOrigin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.error("❌ Blocked by CORS:", origin);
