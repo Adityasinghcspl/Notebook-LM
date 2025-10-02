@@ -12,7 +12,7 @@ export const contentUploadHandler = async (req: Request, res: Response) => {
     if (!title) return res.status(400).json({ error: "Title is required" });
 
     await processContentEmbedding(content, title);
-    res.json({ success: true, message: "Content embedded successfully" });
+    res.json({ success: true, message: "Content Upload Successfully" });
   } catch (error: any) {
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
   }
@@ -30,7 +30,7 @@ export const pdfUploadHandler = async (req: Request, res: Response) => {
 
     await processPDFEmbedding(req.file.buffer, title);
 
-    res.json({ success: true, message: "PDF embedded successfully" });
+    res.json({ success: true, message: "Upload Successfully" });
   } catch (error: any) {
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
   }
@@ -44,7 +44,7 @@ export const urlUploadHandler = async (req: Request, res: Response) => {
     if (!title) return res.status(400).json({ error: "Title is required" });
 
     await processURLEmbedding(url, title);
-    res.json({ success: true, message: "URL embedded successfully" });
+    res.json({ success: true, message: "Upload Successfully" });
   } catch (error: any) {
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
   }
@@ -66,7 +66,7 @@ export const handleDeleteCollection = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Collection name is required" });
     }
     await deleteCollection(collectionName);
-    res.json({ message: `Collection '${collectionName}' deleted successfully` });
+    res.json({ message: `Source '${collectionName}' deleted successfully` });
   } catch (error: any) {
     res.status(error?.status || 500).json({ error: error?.message || "Failed to delete collection" });
   }
@@ -89,7 +89,7 @@ export const vttUploadHandler = async (req: Request, res: Response) => {
     }));
     await processVTTEmbedding(vttFiles, title);
 
-    res.json({ success: true, message: "✅ VTT embedded successfully" });
+    res.json({ success: true, message: "Upload Successfully" });
   } catch (error: any) {
     console.error("File Embedding Error:", error.message);
     res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
