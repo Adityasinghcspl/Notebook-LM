@@ -65,9 +65,10 @@ const uploadVTTBase = multer({
 const uploadVTT = (req: Request, res: Response, next: NextFunction) => {
   uploadVTTBase(req, res, (err: any) => {
     if (err?.code === "LIMIT_UNEXPECTED_FILE") {
-      return res
-        .status(400)
-        .json({ error: "You can upload a maximum of 20 VTT files at once." });
+      const uploadedCount = Array.isArray(req.files) ? req.files.length : 0;
+      return res.status(400).json({
+        error: `You can upload a maximum of 20 VTT files at once. You uploaded ${uploadedCount}.`,
+      });
     }
     if (err) {
       return res.status(400).json({ error: err.message });

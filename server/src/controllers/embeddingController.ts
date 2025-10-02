@@ -3,7 +3,7 @@ import processContentEmbedding from "../utils/embedding/contentEmbedding";
 import processPDFEmbedding from "../utils/embedding/pdfEmbedding";
 import processURLEmbedding from "../utils/embedding/urlEmbedding";
 import { Request, Response } from "express";
-// import processVTTEmbedding from "../utils/embedding/vttEmbedding.js";
+import processVTTEmbedding from "../utils/embedding/vttEmbedding";
 
 export const contentUploadHandler = async (req: Request, res: Response) => {
   try {
@@ -61,7 +61,7 @@ export const handleGetCollections = async (req: Request, res: Response) => {
 
 export const handleDeleteCollection = async (req: Request, res: Response) => {
   try {
-    const collectionName  = req.params.collectionName;
+    const collectionName = req.params.collectionName;
     if (!collectionName) {
       return res.status(400).json({ message: "Collection name is required" });
     }
@@ -72,18 +72,26 @@ export const handleDeleteCollection = async (req: Request, res: Response) => {
   }
 };
 
-// export const vttUploadHandler = async (req, res) => {
-//   try {
-//     if (!req.files || req.files.length === 0) {
-//       return res.status(400).json({ error: "VTT files are required" });
-//     }
+export const vttUploadHandler = async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: "VTT files are required" });
+    }
+    const { title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: "Title is required" });
+    }
 
-//     // req.file.buffer contains file data (since we use memoryStorage)
-//     await processVTTEmbedding(req.files, req.collectionName);
+    const vttFiles = files.map(f => ({
+      buffer: f.buffer,
+      originalname: f.originalname, // pass the VTT filename
+    }));
+    await processVTTEmbedding(vttFiles, title);
 
-//     res.json({ success: true, message: "✅ VTT embedded successfully" });
-//   } catch (error) {
-//     console.error("File Embedding Error:", error.message);
-//     res.status(500).json({ error: error.message || "Internal Server Error" });
-//   }
-// };
+    res.json({ success: true, message: "✅ VTT embedded successfully" });
+  } catch (error: any) {
+    console.error("File Embedding Error:", error.message);
+    res.status(error?.status || 500).json({ error: error?.message || "Internal Server Error" });
+  }
+};
