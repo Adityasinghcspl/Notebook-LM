@@ -37,6 +37,21 @@ if (process.env.NODE_ENV === 'development') {
 // Handle security and origin in production
 if (process.env.NODE_ENV === 'production') {
   app.use(helmet());
+  // Parse comma-separated origins from .env
+  const allowedOrigins = (process.env.UI_URL || '').split(',');
+  // CORS middleware
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
 }
 
 /************************************************************************************

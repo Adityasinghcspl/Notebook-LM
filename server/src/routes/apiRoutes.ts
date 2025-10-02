@@ -10,7 +10,7 @@ const router = express.Router();
 router.post("/upload/content", authenticationOfFirebase, contentUploadHandler);
 router.post("/upload/pdf", authenticationOfFirebase, uploadPDF, pdfUploadHandler);
 router.post("/upload/url", authenticationOfFirebase, urlUploadHandler);
-router.post("/upload/vtt", uploadVTT, vttUploadHandler);
+router.post("/upload/vtt", authenticationOfFirebase, uploadVTT, vttUploadHandler);
 
 // Chat route
 router.post("/chat", authenticationOfFirebase, chatHandler);
