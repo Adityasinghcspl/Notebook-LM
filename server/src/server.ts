@@ -1,7 +1,7 @@
 import express, { Express } from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import router from './routes/apiRoutes';
 
 const app: Express = express();
@@ -14,44 +14,35 @@ app.set('json spaces', 4);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Parse comma-separated origins from .env
+const allowedOrigins: string[] = (process.env.UI_URL || "").split(",");
+
+// Common CORS config
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like curl, Postman, mobile apps)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.error("❌ Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 // Handle logs in console during development
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
-  // Parse comma-separated origins from .env
-  const allowedOrigins = (process.env.UI_URL || '').split(',');
-  // CORS middleware
-  app.use(cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+  app.use(cors(corsOptions));
 }
 
 // Handle security and origin in production
 if (process.env.NODE_ENV === 'production') {
   app.use(helmet());
-  // Parse comma-separated origins from .env
-  const allowedOrigins = (process.env.UI_URL || '').split(',');
-  // CORS middleware
-  app.use(cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+  app.use(cors(corsOptions));
 }
 
 /************************************************************************************
