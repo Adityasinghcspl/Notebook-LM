@@ -13,7 +13,9 @@ export default defineConfig({
   },
   server: {
     headers: {
-      "Cross-Origin-Opener-Policy": "*",
+    "Access-Control-Allow-Origin": "*", // or your backend URL
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   },
 
