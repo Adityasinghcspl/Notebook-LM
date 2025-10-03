@@ -28,7 +28,10 @@ const corsOptions: CorsOptions = {
 };
 
 // Use CORS **before any other middleware**
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: true,   // dynamically reflects request origin
+  credentials: true,
+}));
 
 /************************************************************************************
  *                              Basic Express Middlewares
