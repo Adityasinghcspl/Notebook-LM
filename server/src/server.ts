@@ -10,6 +10,12 @@ const app: Express = express();
  *                              Basic Express Middlewares
  ***********************************************************************************/
 
+if (process.env.NODE_ENV === 'production') {
+  // app.use(helmet());
+  console.log("production ==");
+  app.use(cors());
+}
+
 app.set('json spaces', 4);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,11 +46,11 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Handle security and origin in production
-if (process.env.NODE_ENV === 'production') {
-  // app.use(helmet());
-  console.log("production ==");
-  app.use(cors());
-}
+// if (process.env.NODE_ENV === 'production') {
+//   // app.use(helmet());
+//   console.log("production ==");
+//   app.use(cors());
+// }
 
 /************************************************************************************
  *                               Register all routes
