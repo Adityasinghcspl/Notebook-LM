@@ -42,7 +42,8 @@ if (process.env.NODE_ENV === 'development') {
 // Handle security and origin in production
 if (process.env.NODE_ENV === 'production') {
   // app.use(helmet());
-  app.use(cors(corsOptions));
+  console.log("production ==");
+  app.use(cors());
 }
 
 /************************************************************************************
