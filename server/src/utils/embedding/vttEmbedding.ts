@@ -1,7 +1,7 @@
-import { TextLoader } from 'langchain/document_loaders/fs/text'
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { saveEmbeddings } from "../../middlewares/vectorStore";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 import path from 'path';
 
 export default async function processVTTEmbedding(vttFiles: { buffer: Buffer; originalname: string }[], collectionName: string) {
@@ -11,7 +11,7 @@ export default async function processVTTEmbedding(vttFiles: { buffer: Buffer; or
     const baseName = path.parse(originalname).name;
 
     // Load the VTT file as plain text
-    const blob = new Blob([buffer], { type: "text/vtt" });
+    const blob = new Blob([buffer] as any[], { type: "text/vtt" });
     const loader = new TextLoader(blob);
     const rawDocs = await loader.load(); // returns [Document] with whole file
     const vttText = rawDocs[0].pageContent;

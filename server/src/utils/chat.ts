@@ -3,11 +3,29 @@ import { Response } from "express";
 import { streamText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
+//Concept of API key rotation to handle rate limits and ensure continuous availability of the service.
+// const API_KEYS = [
+//   process.env.GOOGLE_API_KEY_1!,
+//   process.env.GOOGLE_API_KEY_2!,
+//   process.env.GOOGLE_API_KEY_3!,
+// ];
+// let currentKeyIndex = 0;
+
+// function getGoogleModel() {
+//   const apiKey = API_KEYS[currentKeyIndex];
+//   // move to next key
+//   currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+//   const google = createGoogleGenerativeAI({ apiKey });
+//   return google("gemini-3.1-flash-lite-preview");
+// }
+// Initialize the model with the first API key
+// const model = getGoogleModel();
+
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
-const model = google("gemini-2.0-flash");
+const model = google("gemini-3.1-flash-lite-preview");
 
 export default async function chat(query: string, res: Response, collectionName: string, k: number = 3) {
   try {

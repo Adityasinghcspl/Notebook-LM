@@ -27,7 +27,7 @@ const fileFilter = (
 // For PDFs (single, max 5MB)
 const uploadPDFBase = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter,
 }).single("pdf");
 
@@ -37,7 +37,7 @@ const uploadPDF = (req: Request, res: Response, next: NextFunction) => {
     if (err?.code === "LIMIT_FILE_SIZE") {
       return res
         .status(400)
-        .json({ error: "PDF file size must not exceed 5MB." });
+        .json({ error: "PDF file size must not exceed 10MB." });
     }
     if (err?.code === "LIMIT_UNEXPECTED_FILE") {
       return res

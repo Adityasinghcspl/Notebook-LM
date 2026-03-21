@@ -18,5 +18,6 @@ export default async function processPDFEmbedding(pdfBuffer: BlobPart, collectio
   });
 
   const splitDocs = await splitter.splitDocuments(docs);
+  console.log(`✅ Created ${splitDocs.length} chunks`);
   await saveEmbeddings(splitDocs, collectionName);
 }
