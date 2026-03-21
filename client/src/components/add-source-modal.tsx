@@ -117,8 +117,9 @@ export default function AddSourceModal({ isOpen, onClose, title: propTitle }: Ad
       onClose();
     } catch (error: any) {
       toast.error(error);
+      form.reset();
     } finally {
-      form.reset()
+      form.reset();
       setIsLoading(false);
     }
   };

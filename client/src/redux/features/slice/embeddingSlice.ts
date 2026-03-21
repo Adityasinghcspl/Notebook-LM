@@ -59,7 +59,12 @@ export const uploadSource = createAsyncThunk<
 
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to upload source");
+      const message =
+        error?.response?.data?.error ||   // ✅ your backend { error: "..." }
+        error?.response?.data?.message || // ✅ fallback if using message
+        error?.message ||                 // ✅ axios/general error
+        "Failed to upload source";
+      return rejectWithValue(message);
     }
   }
 );
