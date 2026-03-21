@@ -28,7 +28,7 @@ export const pdfUploadHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Title is required" });
     }
 
-    await processPDFEmbedding(req.file.buffer, title);
+    await processPDFEmbedding(req.file.buffer as any, title);
 
     res.json({ success: true, message: "Upload Successfully" });
   } catch (error: any) {
@@ -61,7 +61,7 @@ export const handleGetCollections = async (req: Request, res: Response) => {
 
 export const handleDeleteCollection = async (req: Request, res: Response) => {
   try {
-    const collectionName = req.params.collectionName;
+    const collectionName = req.params.collectionName as string;
     if (!collectionName) {
       return res.status(400).json({ message: "Collection name is required" });
     }
