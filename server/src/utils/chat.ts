@@ -25,7 +25,7 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
-const model = google("gemini-3.1-flash-lite-preview");
+const model = google("gemini-2.5-flash-lite");
 
 export default async function chat(query: string, res: Response, collectionName: string, k: number = 3) {
   try {
