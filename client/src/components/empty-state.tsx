@@ -28,7 +28,7 @@ export default function EmptyState({ isEmpty, selectedCollection }: EmptyStatePr
             <Upload className="w-12 h-12 text-muted-foreground" />
           </button>
 
-          <p className="text-lg font-medium">Add a source to get started</p>
+          <p className="text-lg font-semibold text-foreground">Add a source to get started</p>
 
           <Button
             onClick={() => setIsAddModalOpen(true)}
@@ -48,9 +48,8 @@ export default function EmptyState({ isEmpty, selectedCollection }: EmptyStatePr
   // Case 2: Collections exist, but no source selected
   if (!isEmpty && !selectedCollection) {
     return (
-      <div className="flex flex-col items-center text-center gap-4">
-        <p className="text-lg font-medium">Please select a source file</p>
-      </div>
+      <>
+      </>
     );
   }
 

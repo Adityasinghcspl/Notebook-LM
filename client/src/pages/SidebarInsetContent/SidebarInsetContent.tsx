@@ -15,7 +15,7 @@ export default function SidebarInsetContent() {
 
   return (
     <>
-      <SidebarInset>
+      <SidebarInset className="h-[100svh] md:h-[calc(100svh-1rem)] overflow-hidden">
         <header
           className="
             sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 px-4 border-b
@@ -44,21 +44,21 @@ export default function SidebarInsetContent() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="bg-muted/50 flex-1 rounded-xl p-6 shadow-sm border text-base leading-relaxed text-muted-foreground overflow-y-auto flex flex-col">
-            {/* Empty state centered */}
-            {/* {isEmpty && ( */}
-            <div className="flex flex-1 items-center justify-center">
-              <EmptyState isEmpty={isEmpty} selectedCollection={selectedCollection} />
-            </div>
-            {/* )} */}
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 min-h-0">
+          <div className="bg-muted/50 flex-1 rounded-xl shadow-sm border text-base leading-relaxed text-muted-foreground flex flex-col overflow-hidden min-h-0">
+            {/* Empty state — only when no sources */}
+            {(isEmpty || !selectedCollection) && (
+              <div className="flex flex-1 items-center justify-center p-6">
+                <EmptyState isEmpty={isEmpty} selectedCollection={selectedCollection} />
+              </div>
+            )}
 
-            {/* Chat always visible, but disabled if empty */}
-            <div className="mt-auto">
-              <div className={isEmpty || !selectedCollection ? "pointer-events-none opacity-50" : ""}>
+            {/* Chat — fills the panel when sources exist */}
+            {!isEmpty && (
+              <div className={`flex flex-1 flex-col min-h-0 ${!selectedCollection ? 'pointer-events-none opacity-50' : ''}`}>
                 <ChatModal />
               </div>
-            </div>
+            )}
           </div>
         </div>
       </SidebarInset>

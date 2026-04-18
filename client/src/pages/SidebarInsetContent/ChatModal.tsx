@@ -1,119 +1,212 @@
+import { MicIcon, SendHorizonalIcon, SparklesIcon } from 'lucide-react';
+import { useRef, useState } from 'react';
 import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputButton,
-  type PromptInputMessage,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input';
-import { MicIcon, SendHorizonalIcon } from 'lucide-react';
-import { useState } from 'react';
-import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
-import { Message, MessageContent } from '@/components/ai-elements/message';
+  Conversation,
+  ConversationContent,
+  ConversationDownload,
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation';
 import { Response } from '@/components/ai-elements/response';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/redux/store';
 import { sendMessage } from '@/redux/features/slice/chatSlice';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
+/* ─── Typing indicator ─────────────────────────────────────────── */
+const TypingDots = () => (
+  <div className="flex items-center gap-1 px-1 py-0.5">
+    {[0, 1, 2].map((i) => (
+      <span
+        key={i}
+        className="size-2 rounded-full bg-muted-foreground/60 animate-bounce"
+        style={{ animationDelay: `${i * 0.15}s`, animationDuration: '0.9s' }}
+      />
+    ))}
+  </div>
+);
+
+/* ─── Main component ─────────────────────────────────────────────── */
 const ChatModal = () => {
   const [text, setText] = useState<string>('');
   const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const { messages, loading } = useSelector((state: RootState) => state.chat);
-  const selectedCollection = useSelector((state: RootState) => state.collections?.selectedCollection);
-  const handleSubmit = (message: PromptInputMessage) => {
-    const hasText = Boolean(message.text);
-    const hasAttachments = Boolean(message.files?.length);
+  const selectedCollection = useSelector(
+    (state: RootState) => state.collections?.selectedCollection
+  );
 
-    if (!(hasText || hasAttachments)) return;
-
-    // ✅ Dispatch Redux thunk (sends request & streams assistant reply)
-    if (message.text) {
-      dispatch(sendMessage({ collectionName: selectedCollection || '', message: message.text }));
-    }
+  const handleSubmit = () => {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+    dispatch(sendMessage({ collectionName: selectedCollection || '', message: trimmed }));
     setText('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   };
 
-  return (
-    <div className="max-w-5xl mx-auto relative">
-      {/* Conversation messages */}
-      <Conversation>
-        <ConversationContent className="flex flex-col gap-3 p-4">
-          {messages.map((message, index) => (
-            <Message
-              from={message.role}
-              key={index} // ideally use message.id
-              className={`
-                last:mb-2
-                rounded-lg px-4 py-2 break-words
-              `}
-            >
-              <MessageContent
-                className="prose prose-sm tracking-wide leading-loose
-                [&_[data-code-block-container='true']]:bg-background
-                [&_[data-code-block-container='true']]:my-6"
-              >
-                {/* Check if the message has code blocks */}
-                <Response
-                  className="prose prose-sm max-w-full"
-                >
-                  {message.content}
-                </Response>
-              </MessageContent>
-            </Message>
-          ))}
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
 
-          {/* Loader while assistant is typing */}
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+    // auto-grow
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  };
+
+  const isEmpty = messages.length === 0 && !loading;
+
+  return (
+    <div className="relative flex flex-col h-full text-foreground">
+
+      {/* ── Message area ── */}
+      <Conversation className="flex-1 min-h-0">
+        <ConversationContent className="flex flex-col gap-0 pt-6 pb-36 px-4">
+
+          {/* Empty state */}
+          {isEmpty && (
+            <div className="flex flex-col items-center justify-center flex-1 gap-3 mb-25 select-none">
+              <div className="flex items-center justify-center size-14 rounded-2xl bg-primary/10 text-primary shadow-inner">
+                <SparklesIcon size={28} />
+              </div>
+              <p className="text-lg font-semibold text-foreground">How can I help you?</p>
+              <p className="text-sm text-muted-foreground">
+                {selectedCollection
+                  ? 'Ask anything about your collection.'
+                  : 'Select a source file to get started.'}
+              </p>
+            </div>
+          )}
+
+          {/* Messages */}
+          {messages.map((message) => {
+            const isUser = message.role === 'user';
+            return (
+              <div
+                key={message.id}
+                className={cn(
+                  'group w-full flex gap-3 py-3 px-2 sm:px-6 max-w-4xl mx-auto',
+                  isUser ? 'justify-end' : 'justify-start'
+                )}
+              >
+                {/* Assistant avatar */}
+                {!isUser && (
+                  <div className="flex-shrink-0 mt-0.5 flex items-center justify-center size-8 rounded-full bg-primary/10 text-primary ring-1 ring-inset ring-primary/20">
+                    <SparklesIcon size={14} />
+                  </div>
+                )}
+
+                {/* Bubble */}
+                <div
+                  className={cn(
+                    'relative max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed break-words shadow-sm',
+                    isUser
+                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                      : 'bg-muted text-foreground rounded-tl-sm'
+                  )}
+                >
+                  {isUser ? (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  ) : (
+                    <Response className="prose prose-sm max-w-full dark:prose-invert">
+                      {message.content}
+                    </Response>
+                  )}
+                </div>
+
+                {/* User avatar placeholder */}
+                {
+                  isUser && (
+                    <div className="flex-shrink-0 mt-0.5 flex items-center justify-center size-8 rounded-full bg-secondary ring-1 ring-inset ring-border text-xs font-semibold text-muted-foreground select-none">
+                      You
+                    </div>
+                  )
+                }
+              </div>
+            );
+          })}
+
+          {/* Loading / typing indicator */}
           {loading && (
-            <Message
-              from="assistant"
-              key="loading"
-              className="rounded-lg px-4 py-2 self-start"
-            >
-              <MessageContent className="text-base leading-relaxed font-sans">
-                <Response>⌛ Thinking...</Response>
-              </MessageContent>
-            </Message>
+            <div className="group w-full flex gap-3 py-3 px-2 sm:px-6 max-w-4xl mx-auto justify-start">
+              <div className="flex-shrink-0 mt-0.5 flex items-center justify-center size-8 rounded-full bg-primary/10 text-primary ring-1 ring-inset ring-primary/20">
+                <SparklesIcon size={14} />
+              </div>
+              <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                <TypingDots />
+              </div>
+            </div>
           )}
         </ConversationContent>
-        <ConversationScrollButton />
+
+        {/* Download conversation button */}
+        {messages.length > 0 && (
+          <ConversationDownload
+            messages={messages as any}
+            filename="conversation.md"
+          />
+        )}
+
+        {/* Scroll-to-bottom button – sits above the input bar */}
+        <ConversationScrollButton className="bottom-36" />
+
       </Conversation>
 
-      {/* Input box */}
-      <PromptInput onSubmit={handleSubmit} className="mt-4" globalDrop multiple>
-        <PromptInputBody className="relative">
-          {/* Textarea */}
-          <PromptInputTextarea
-            onChange={(e) => setText(e.target.value)}
-            value={text}
-            className="pr-10 text-base text-primary font-sans"
-          />
+      {/* ── Input bar ── */}
+      <div className="absolute bottom-0 left-0 right-0 bg-background px-4 pb-4 pt-2 rounded-b-xl">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-end gap-2 rounded-2xl border border-border bg-background shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={handleTextareaInput}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask anything…"
+              rows={1}
+              className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none py-1.5 max-h-[200px] leading-relaxed"
+            />
 
-          {/* Mic OR Send Button */}
-          <div className="absolute right-2 bottom-2">
-            {text.trim().length === 0 ? (
-              <PromptInputButton
-                onClick={() => setUseMicrophone(!useMicrophone)}
+            <div className="flex items-center gap-1 pb-0.5">
+              {/* Mic button */}
+              <Button
+                type="button"
                 variant={useMicrophone ? 'default' : 'ghost'}
                 size="icon"
-                className='p-2 mb-1 mr-1'
+                className="size-8 rounded-full shrink-0"
+                onClick={() => setUseMicrophone((v) => !v)}
               >
-                <MicIcon size={18} />
-              </PromptInputButton>
-            ) : (
-              <PromptInputSubmit
-                disabled={loading}
-                className="p-2 mb-1 mr-2 bg-primary text-white rounded-md"
+                <MicIcon size={16} />
+              </Button>
+
+              {/* Send button */}
+              <Button
+                type="button"
+                size="icon"
+                onClick={handleSubmit}
+                disabled={!text.trim() || loading}
+                className="size-8 rounded-full shrink-0 bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors"
               >
-                <SendHorizonalIcon size={18} />
-              </PromptInputSubmit>
-            )}
+                <SendHorizonalIcon size={15} />
+              </Button>
+            </div>
           </div>
-        </PromptInputBody>
-      </PromptInput>
-    </div>
-  );
-};
+
+          <p className="text-center text-[11px] text-muted-foreground mt-2 select-none">
+            AI can make mistakes. Verify important information.
+          </p>
+        </div>
+      </div>
+    </div >
+  )
+}
 
 export default ChatModal;

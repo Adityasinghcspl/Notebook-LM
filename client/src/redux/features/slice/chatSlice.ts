@@ -1,12 +1,12 @@
 
 import { RESTServerRoute } from "@/types/server";
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
-import type { Key } from "react";
 
 export interface ChatMessage {
-  id?: Key | null | undefined;
+  id: string;
   role: "user" | "assistant";
   content: string;
+  parts: { type: "text"; text: string }[];
 }
 
 interface ChatState {
@@ -30,7 +30,7 @@ export const sendMessage = createAsyncThunk<
   try {
     const { user } = getState() as any;
     const accessToken = user.data?.accessToken || "";
-    dispatch(addMessage({ role: "user", content: message })); // Add user message immediately
+    dispatch(addMessage({ id: crypto.randomUUID(), role: "user", content: message, parts: [{ type: "text", text: message }] })); // Add user message immediately
 
     // 🚀 STEP 1: Use native fetch for streaming
     const url = import.meta.env.VITE_API_REST_ENDPOINT + RESTServerRoute.REST_CHAT;
@@ -45,7 +45,7 @@ export const sendMessage = createAsyncThunk<
       headers: headers,
       body: body
     });
-    console.log(response.body,"response");
+    console.log(response.body, "response");
     // STEP 2: Handle non-streaming HTTP errors (4xx/5xx)
     if (!response.ok || !response.body) {
       const errorText = await response.text();
@@ -112,11 +112,12 @@ const chatSlice = createSlice({
       const lastMsg = state.messages[state.messages.length - 1];
       if (lastMsg?.role === "assistant") {
         lastMsg.content = action.payload;
+        lastMsg.parts = [{ type: "text", text: action.payload }];
       } else {
-        state.messages.push({ role: "assistant", content: action.payload });
+        state.messages.push({ id: crypto.randomUUID(), role: "assistant", content: action.payload, parts: [{ type: "text", text: action.payload }] });
       }
     },
-    finalizeAssistantMessage: () => {},
+    finalizeAssistantMessage: () => { },
   },
   extraReducers: (builder) => {
     builder
