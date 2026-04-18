@@ -70,7 +70,7 @@ const ChatModal = () => {
 
       {/* ── Message area ── */}
       <Conversation className="flex-1 min-h-0">
-        <ConversationContent className="flex flex-col gap-0 pt-6 pb-36 px-4">
+        <ConversationContent className="flex flex-col gap-0 pt-6 pb-4 px-4">
 
           {/* Empty state */}
           {isEmpty && (
@@ -157,12 +157,12 @@ const ChatModal = () => {
         )}
 
         {/* Scroll-to-bottom button – sits above the input bar */}
-        <ConversationScrollButton className="bottom-36" />
+        <ConversationScrollButton className="bottom-4" />
 
       </Conversation>
 
       {/* ── Input bar ── */}
-      <div className="absolute bottom-0 left-0 right-0 bg-background px-4 pb-4 pt-2 rounded-b-xl">
+      <div className="shrink-0 z-10 px-4 pb-4 pt-2 rounded-b-xl">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end gap-2 rounded-2xl border border-border bg-background shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
             <textarea
