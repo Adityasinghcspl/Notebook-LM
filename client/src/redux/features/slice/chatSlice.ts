@@ -9,14 +9,35 @@ export interface ChatMessage {
   parts: { type: "text"; text: string }[];
 }
 
-interface ChatState {
+export interface ChatSession {
+  id: string;
+  title: string;
+  collectionName: string;
   messages: ChatMessage[];
+  updatedAt: number;
+}
+
+interface ChatState {
+  sessions: ChatSession[];
+  activeSessionId: string | null;
   loading: boolean;
   error: string | null;
 }
 
+let initialSessions: ChatSession[] = [];
+let initialActiveSession: string | null = null;
+try {
+  const stored = localStorage.getItem('notebooklm_chat_history');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    initialSessions = parsed.sessions || [];
+    initialActiveSession = parsed.activeSessionId || null;
+  }
+} catch (e) {}
+
 const initialState: ChatState = {
-  messages: [],
+  sessions: initialSessions,
+  activeSessionId: initialActiveSession,
   loading: false,
   error: null,
 };
@@ -30,7 +51,7 @@ export const sendMessage = createAsyncThunk<
   try {
     const { user } = getState() as any;
     const accessToken = user.data?.accessToken || "";
-    dispatch(addMessage({ id: crypto.randomUUID(), role: "user", content: message, parts: [{ type: "text", text: message }] })); // Add user message immediately
+    dispatch(addMessage({ id: crypto.randomUUID(), role: "user", content: message, parts: [{ type: "text", text: message }], collectionName })); // Add user message immediately
 
     // 🚀 STEP 1: Use native fetch for streaming
     const url = import.meta.env.VITE_API_REST_ENDPOINT + RESTServerRoute.REST_CHAT;
@@ -105,17 +126,64 @@ const chatSlice = createSlice({
   name: "chat",
   initialState,
   reducers: {
-    addMessage: (state, action: PayloadAction<ChatMessage>) => {
-      state.messages.push(action.payload);
+    createNewSession: (state, action: PayloadAction<string>) => {
+      const newSession: ChatSession = {
+        id: crypto.randomUUID(),
+        title: `Chat - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        collectionName: action.payload,
+        messages: [],
+        updatedAt: Date.now(),
+      };
+      state.sessions.unshift(newSession);
+      state.activeSessionId = newSession.id;
+    },
+    setActiveSession: (state, action: PayloadAction<string>) => {
+      state.activeSessionId = action.payload;
+    },
+    deleteSession: (state, action: PayloadAction<string>) => {
+      state.sessions = state.sessions.filter(s => s.id !== action.payload);
+      if (state.activeSessionId === action.payload) {
+        state.activeSessionId = null;
+      }
+    },
+    addMessage: (state, action: PayloadAction<ChatMessage & { collectionName: string }>) => {
+      const { collectionName, ...message } = action.payload;
+      let session = state.sessions.find(s => s.id === state.activeSessionId);
+      
+      // Auto-create session if none active or collection mismatch
+      if (!session || session.collectionName !== collectionName) {
+        const newSession: ChatSession = {
+          id: crypto.randomUUID(),
+          title: `Chat - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          collectionName: collectionName,
+          messages: [],
+          updatedAt: Date.now(),
+        };
+        state.sessions.unshift(newSession);
+        state.activeSessionId = newSession.id;
+        session = newSession;
+      }
+      
+      session.messages.push(message);
+      session.updatedAt = Date.now();
     },
     updateAssistantMessage: (state, action: PayloadAction<string>) => {
-      const lastMsg = state.messages[state.messages.length - 1];
+      const session = state.sessions.find(s => s.id === state.activeSessionId);
+      if (!session) return;
+      
+      const lastMsg = session.messages[session.messages.length - 1];
       if (lastMsg?.role === "assistant") {
         lastMsg.content = action.payload;
         lastMsg.parts = [{ type: "text", text: action.payload }];
       } else {
-        state.messages.push({ id: crypto.randomUUID(), role: "assistant", content: action.payload, parts: [{ type: "text", text: action.payload }] });
+        session.messages.push({ 
+          id: crypto.randomUUID(), 
+          role: "assistant", 
+          content: action.payload, 
+          parts: [{ type: "text", text: action.payload }] 
+        });
       }
+      session.updatedAt = Date.now();
     },
     finalizeAssistantMessage: () => { },
   },
@@ -135,7 +203,13 @@ const chatSlice = createSlice({
   },
 });
 
-export const { addMessage, updateAssistantMessage, finalizeAssistantMessage } =
-  chatSlice.actions;
+export const { 
+  addMessage, 
+  updateAssistantMessage, 
+  finalizeAssistantMessage,
+  createNewSession,
+  setActiveSession,
+  deleteSession
+} = chatSlice.actions;
 
 export default chatSlice.reducer;

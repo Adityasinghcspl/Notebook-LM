@@ -33,7 +33,9 @@ const ChatModal = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { messages, loading } = useSelector((state: RootState) => state.chat);
+  const { sessions, activeSessionId, loading } = useSelector((state: RootState) => state.chat);
+  const activeSession = sessions.find(s => s.id === activeSessionId);
+  const messages = activeSession?.messages || [];
   const selectedCollection = useSelector(
     (state: RootState) => state.collections?.selectedCollection
   );

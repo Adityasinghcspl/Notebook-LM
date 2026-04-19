@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Brain, CircleFadingPlus, FileChartColumn, MoreVertical, Trash2 } from "lucide-react";
+import { Brain, CircleFadingPlus, FileChartColumn, MoreVertical, Trash2, MessageSquare, Plus, ChevronRight, Database, History } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { Loader } from "./ui/loader";
@@ -16,6 +16,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarMenuAction,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
@@ -28,6 +32,8 @@ import {
 import AddSourceModal from "./add-source-modal";
 import { toast } from "react-toastify";
 import { deleteCollection, getAllCollectionList, setSelectedCollection } from "@/redux/features/slice/collectionsSlice";
+import { createNewSession, setActiveSession, deleteSession } from "@/redux/features/slice/chatSlice";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -35,6 +41,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const dispatch = useDispatch<AppDispatch>();
 
   const { data: collections, isLoading, selectedCollection } = useSelector((state: RootState) => state.collections);
+  const { sessions, activeSessionId } = useSelector((state: RootState) => state.chat);
   const user = useSelector((state: RootState) => state.user.data?.providerData);
 
   const userData = {
@@ -128,8 +135,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                   )}
                 </SidebarMenuItem>
               </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-              <SidebarGroupLabel className="pt-8 text-sm">Select sources</SidebarGroupLabel>
+          <SidebarGroup>
+            <SidebarMenu>
+              <Collapsible defaultOpen className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Select sources">
+                      <Database className="w-4 h-4" />
+                      <span>Select sources</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
 
               {/* Loader */}
               {isLoading && (
@@ -150,35 +171,27 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               )}
 
               {/* Collection List */}
-              <div className="pt-4">
+              <div className="pt-2 pb-2 text-sm flex flex-col gap-1.5">
                 {!isLoading &&
                   collections.map((collection) => {
                     const isActive = selectedCollection === collection.name
 
                     return (
-                      <div
-                        key={collection.name}
-                        onClick={() => handleCheckboxChange(collection.name)}
-                        className={cn(
-                          "flex items-center justify-between gap-2 py-1.5 px-2 mt-2 rounded-md transition-colors border cursor-pointer",
-                          isActive
-                            ? "bg-muted border-primary"
-                            : "bg-transparent hover:bg-muted/40 border-transparent"
-                        )}
-                      >
-                        {/* Collection name */}
-                        <span className="text-sm font-medium">{collection.name}</span>
+                      <SidebarMenuSubItem key={collection.name}>
+                        <SidebarMenuSubButton 
+                          asChild
+                          isActive={isActive}
+                          onClick={() => handleCheckboxChange(collection.name)}
+                          className={cn("cursor-pointer pr-8 h-auto py-2", isActive && "font-bold")}
+                        >
+                          <span>{collection.name}</span>
+                        </SidebarMenuSubButton>
 
-                        {/* Three dots menu */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => e.stopPropagation()} // prevent row click
-                            >
+                            <SidebarMenuAction showOnHover>
                               <MoreVertical className="w-4 h-4" />
-                            </Button>
+                            </SidebarMenuAction>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleAddClick(collection.name)}>
@@ -193,12 +206,83 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
+                      </SidebarMenuSubItem>
                     )
                   })}
               </div>
 
-            </SidebarGroupContent>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          {/* Chat History Group */}
+          <SidebarGroup className="mt-2">
+            <SidebarMenu>
+              <Collapsible defaultOpen className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Recent Chats">
+                      <History className="w-4 h-4" />
+                      <span>Recent Chats</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  
+                  {open && selectedCollection && (
+                    <SidebarMenuAction
+                      onClick={() => dispatch(createNewSession(selectedCollection))}
+                      title="New Chat for selected source"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </SidebarMenuAction>
+                  )}
+
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <div className="pt-2 pb-2 text-sm flex flex-col gap-1.5">
+                        {sessions.length === 0 && open && (
+                          <div className="px-4 py-4 text-xs text-muted-foreground text-center">
+                            No recent chats
+                          </div>
+                        )}
+                        {sessions.map((session) => {
+                          const isActive = activeSessionId === session.id;
+
+                          return (
+                            <SidebarMenuSubItem key={session.id}>
+                              <SidebarMenuSubButton 
+                                asChild
+                                isActive={isActive}
+                                onClick={() => dispatch(setActiveSession(session.id))}
+                                className={cn("cursor-pointer pr-8 h-auto py-2", isActive && "font-bold")}
+                              >
+                                <div className="flex flex-col items-start justify-center overflow-hidden w-full">
+                                  <span className={cn("text-xs truncate w-full", isActive ? "font-bold" : "font-medium")}>{session.title}</span>
+                                  <span className="text-[10px] text-muted-foreground truncate w-full">{session.collectionName}</span>
+                                </div>
+                              </SidebarMenuSubButton>
+
+                              <SidebarMenuAction 
+                                showOnHover
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dispatch(deleteSession(session.id));
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                              </SidebarMenuAction>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </div>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
 
