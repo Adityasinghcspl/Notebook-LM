@@ -47,7 +47,7 @@ export default function SidebarInsetContent() {
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 min-h-0">
           <div className="bg-muted/50 flex-1 rounded-xl shadow-sm border text-base leading-relaxed text-muted-foreground flex flex-col overflow-hidden min-h-0">
             {/* Empty state — only when no sources */}
-            {(isEmpty || !selectedCollection) && (
+            {isEmpty && (
               <div className="flex flex-1 items-center justify-center p-6">
                 <EmptyState isEmpty={isEmpty} selectedCollection={selectedCollection} />
               </div>
