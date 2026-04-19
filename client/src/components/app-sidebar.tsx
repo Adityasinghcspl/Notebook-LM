@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Brain, CircleFadingPlus, FileChartColumn, MoreVertical, Trash2, MessageSquare, Plus, ChevronRight, Database, History } from "lucide-react";
+import { Brain, CircleFadingPlus, FileChartColumn, MoreVertical, Trash2, Plus, ChevronRight, Database, History } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { Loader } from "./ui/loader";
@@ -66,7 +66,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     try {
       const msg = await dispatch(deleteCollection(name)).unwrap();
       toast.success(msg);
-      
+
     } catch (err: any) {
       toast.error(err);
     }
@@ -152,64 +152,64 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                   <CollapsibleContent>
                     <SidebarMenuSub>
 
-              {/* Loader */}
-              {isLoading && (
-                <div className="flex items-center justify-center ">
-                  <Loader size={24} className="h-[50vh]" />
-                </div>
-              )}
+                      {/* Loader */}
+                      {isLoading && (
+                        <div className="flex items-center justify-center ">
+                          <Loader size={24} className="h-[50vh]" />
+                        </div>
+                      )}
 
-              {/* Empty State */}
-              {!isLoading && collections.length === 0 && open && (
-                <div className="flex flex-col items-center justify-center text-center px-4 py-20">
-                  <FileChartColumn className="w-12 h-12 text-muted-foreground mb-4" />
-                  <p className="text-sm font-medium">Saved sources will appear here</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Click Add source above to add PDFs, websites, text, videos, or audio files.
-                  </p>
-                </div>
-              )}
+                      {/* Empty State */}
+                      {!isLoading && collections.length === 0 && open && (
+                        <div className="flex flex-col items-center justify-center text-center px-4 py-20">
+                          <FileChartColumn className="w-12 h-12 text-muted-foreground mb-4" />
+                          <p className="text-sm font-medium">Saved sources will appear here</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Click Add source above to add PDFs, websites, text, videos, or audio files.
+                          </p>
+                        </div>
+                      )}
 
-              {/* Collection List */}
-              <div className="pt-2 pb-2 text-sm flex flex-col gap-1.5">
-                {!isLoading &&
-                  collections.map((collection) => {
-                    const isActive = selectedCollection === collection.name
+                      {/* Collection List */}
+                      <div className="pt-2 pb-2 text-sm flex flex-col gap-1.5">
+                        {!isLoading &&
+                          collections.map((collection) => {
+                            const isActive = selectedCollection === collection.name
 
-                    return (
-                      <SidebarMenuSubItem key={collection.name}>
-                        <SidebarMenuSubButton 
-                          asChild
-                          isActive={isActive}
-                          onClick={() => handleCheckboxChange(collection.name)}
-                          className={cn("cursor-pointer pr-8 h-auto py-2", isActive && "font-bold")}
-                        >
-                          <span>{collection.name}</span>
-                        </SidebarMenuSubButton>
+                            return (
+                              <SidebarMenuSubItem key={collection.name}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isActive}
+                                  onClick={() => handleCheckboxChange(collection.name)}
+                                  className={cn("cursor-pointer pr-8 h-auto py-2", isActive && "font-bold")}
+                                >
+                                  <span>{collection.name}</span>
+                                </SidebarMenuSubButton>
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <SidebarMenuAction showOnHover>
-                              <MoreVertical className="w-4 h-4" />
-                            </SidebarMenuAction>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleAddClick(collection.name)}>
-                              <CircleFadingPlus className="size-4" />
-                              Add Source
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(collection.name)}
-                            >
-                              <Trash2 className="size-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </SidebarMenuSubItem>
-                    )
-                  })}
-              </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <SidebarMenuAction showOnHover>
+                                      <MoreVertical className="w-4 h-4" />
+                                    </SidebarMenuAction>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleAddClick(collection.name)}>
+                                      <CircleFadingPlus className="size-4" />
+                                      Add Source
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelete(collection.name)}
+                                    >
+                                      <Trash2 className="size-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </SidebarMenuSubItem>
+                            )
+                          })}
+                      </div>
 
                     </SidebarMenuSub>
                   </CollapsibleContent>
@@ -230,7 +230,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
-                  
+
                   {open && selectedCollection && (
                     <SidebarMenuAction
                       onClick={() => dispatch(createNewSession(selectedCollection))}
@@ -253,7 +253,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
                           return (
                             <SidebarMenuSubItem key={session.id}>
-                              <SidebarMenuSubButton 
+                              <SidebarMenuSubButton
                                 asChild
                                 isActive={isActive}
                                 onClick={() => dispatch(setActiveSession(session.id))}
@@ -265,7 +265,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                                 </div>
                               </SidebarMenuSubButton>
 
-                              <SidebarMenuAction 
+                              <SidebarMenuAction
                                 showOnHover
                                 onClick={(e) => {
                                   e.stopPropagation();
